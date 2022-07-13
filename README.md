@@ -20,10 +20,12 @@ Currently the 3rd party API that `property-api` connects to does not have its cr
 
 ## Next Steps
 * Actually setting up access to a HouseCanary API Key to talk to a live service.
+* Correspondingly, setting up authentication on this endpoint so that only authorized users can contact it.
 * Deployment code: cloud infrastructure via Terraform?  CI/CD integration? 
 * Integration testing; can we verify that deployed code is behaving as expected, in an automated fashion?
 * Schema library (e.g. Marshmallow) to handle API interface validation.
 * Could break code out of the routes.py file as it grows in complexity into individual 'Views' files.
+* API documentation (e.g. Swagger) for this service, so that any consumers know what to expect with request/responses.
 
 
 ## Future Development
