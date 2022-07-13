@@ -1,8 +1,12 @@
 env:
 	pipenv sync --dev
 
+clean:
+	pipenv --rm
+	rm -rf .pytest_cache
+
 test:
 	pipenv run python -m pytest
 
-clean:
-	pipenv --rm
+run:
+	pipenv run python run.py

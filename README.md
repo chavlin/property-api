@@ -11,8 +11,11 @@ This code requires python3.8 to run, and assumes you've installed it as a prereq
 
 The rest of the setup can be done via a Makefile:
 * `make env`: does all installation via pipenv
-* `make test`: runs unit tests
 * `make clean`: tears down pipenv environment
+* `make test`: runs unit tests
+* `make run`: start up the Flask instance
+
+Currently the 3rd party API that `property-api` connects to does not have its credentials, so live testing is not yet possible.  `make run` will start a flask instance that a user could test by navigating in a browser to `http://127.0.0.1:5000/health-check`.  But code can only truly be run in unit tests for now.
 
 
 ## Next Steps
