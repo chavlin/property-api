@@ -21,7 +21,7 @@ NOTE: All POST endpoints expect the header 'Content-Type': 'application/json'
 
 
 ## Next Steps
-* Coordinate with Web App to determine preferred interface; could combine the property-details single and batch endpoints, or discard one entirely. (maybe always do batch queries even with query of one).
+* Coordinate with consuming Web App to determine preferred interface. Currently we support single-property and batch-property endpoints but perhaps we end up foregoing one of them entirely.
 * Actually setting up access to a HouseCanary API Key to talk to a live service.
 * Correspondingly, setting up authentication on this endpoint so that only authorized users can contact it.
 * Deployment code: cloud infrastructure via Terraform?  CI/CD integration? 
@@ -30,6 +30,7 @@ NOTE: All POST endpoints expect the header 'Content-Type': 'application/json'
 * API documentation (e.g. Swagger) for this service, so that any consumers know what to expect with request/responses.
 * Could break code out of the routes.py file as it grows in complexity into individual 'Views' files.
 * Linting / standardized dev tooling.
+* Expanded documentation on method args/responses/typing.
 
 
 ## Future Development

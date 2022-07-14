@@ -45,11 +45,11 @@ class HouseCanaryV2API():
         )
         return response
 
-    def get_property_details(self, params):
+    def get_property_details(self, params: dict):
         """Access the GET property-details endpoint"""
         return self.make_get_request(self.property_details_endpoint, params)
 
-    def get_property_details_batch(self, json):
+    def get_property_details_batch(self, json: dict):
         """Access the POST property-details endpoint (batch mode)"""
         return self.make_post_request(self.property_details_endpoint, json)
 

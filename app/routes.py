@@ -15,8 +15,8 @@ from flask import Response, request
 from app.models import HouseCanaryV2API
 
 
-# Move to utils function eventually:
-def handle_third_party_failure_response(response: dict, logger):
+# Move to utils module eventually:
+def handle_third_party_failure_response(response: Response, logger):
     """Helper function to consistently handle failures in 3rd-party API.  Consistent logging + response."""
     logger.warning('3rd-party API returned non-200 response.',
         extra={
@@ -30,9 +30,9 @@ def handle_third_party_failure_response(response: dict, logger):
     return Response(json.dumps(final_response), 200)
 
 
-# Move to utils function eventually:
+# Move to utils module eventually:
 def send_successful_response(response_body: dict):
-    """Helper function to handle consistent parsing / status code for successful response"""
+    """Helper function to handle consistent parsing / status code for successful response from THIS API"""
     return Response(json.dumps(response_body), 200)
 
 
@@ -158,7 +158,8 @@ def create_app():
             assert property.get('zipcode')
 
         # We'd also eventually want to make sure request size is less than 100 items,
-        # since that's the limit of the 3rd party endpoint. But that seems very unlikely given the use case here.
+        # since that's the limit of the 3rd party endpoint (without implementing pagination).
+        # But that seems very unlikely given the use case presented from the web app of lookup-by-customer.
 
         api = HouseCanaryV2API()
         property_response = api.get_property_details_batch(request_body)
@@ -166,10 +167,10 @@ def create_app():
         if property_response.status_code != 200:
             return handle_third_party_failure_response(property_response, logger)
 
-        # Here we will be savvier about forming the final response, using the response body as an initial template.
-        # Then we merge septic information from the 3rd party API's property_response, one-by-one
-        property_response_body = property_response.json()
+        # Here we will be savvier about forming the final response, using the initial REQUEST body as an initial template.
+        # Then we merge septic information from the 3rd party API's property_response, one-by-one, returning the final combined list.
         final_response_body = deepcopy(request_body)
+        property_response_body = property_response.json()
         for i, property in enumerate(property_response_body):
             # NOTE: see above note on 'Yes' sewer systems; current implementation does NOT consider 'Yes' systems
             # to be septic systems.
