@@ -6,7 +6,7 @@ Currently it's configured with [HouseCanary](https://api-docs.housecanary.com/) 
 
 
 ## Setup
-This code requires python3.8 to run, and assumes you've installed it as a prerequisite.  (Rather than using the system version, a python package manager is recommended (e.g. [pipenv](https://github.com/pyenv/pyenv))
+This code requires python3.8 to run, and assumes you've installed it as a prerequisite.  (Rather than using the system version, a python package manager is recommended (e.g. [pyenv](https://github.com/pyenv/pyenv))
 * Install pipenv: `pip install pipenv`
 
 The rest of the setup can be done via a Makefile:
