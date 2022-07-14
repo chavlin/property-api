@@ -5,6 +5,7 @@ from app.routes import create_app
 
 @pytest.fixture()
 def test_app():
+    """This and the following fixture set up a mocked app server that can be used to call routes directly in unit tests."""
     app = create_app()
     app.config.update({
         "TESTING": True,

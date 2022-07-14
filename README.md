@@ -15,7 +15,7 @@ The rest of the setup can be done via a Makefile:
 * `make test`: runs unit tests
 * `make run`: start up the Flask instance
 
-Currently the 3rd party API that `property-api` connects to does not have its credentials, so live testing is not yet possible.  `make run` will start a flask instance that a user could test by navigating in a browser to `http://127.0.0.1:5000/health-check`.  But code can only truly be run in unit tests for now.
+Currently the 3rd party API that `property-api` connects to does not have its credentials, so live testing is not yet possible.  `make run` will start a flask instance that a user could test by navigating in a browser to `http://127.0.0.1:5000/health-check`.  But code paths can only truly be run in mocked unit tests for now.
 
 
 ## Next Steps
@@ -23,9 +23,10 @@ Currently the 3rd party API that `property-api` connects to does not have its cr
 * Correspondingly, setting up authentication on this endpoint so that only authorized users can contact it.
 * Deployment code: cloud infrastructure via Terraform?  CI/CD integration? 
 * Integration testing; can we verify that deployed code is behaving as expected, in an automated fashion?
-* Schema library (e.g. Marshmallow) to handle API interface validation.
-* Could break code out of the routes.py file as it grows in complexity into individual 'Views' files.
+* Schema library (e.g. Marshmallow) to handle API interface validation (inputs and outputs)
 * API documentation (e.g. Swagger) for this service, so that any consumers know what to expect with request/responses.
+* Could break code out of the routes.py file as it grows in complexity into individual 'Views' files.
+* Linting / standardized dev tooling.
 
 
 ## Future Development
