@@ -2,37 +2,19 @@ import json
 
 from app.models import HouseCanaryV2API
 
-def test_property_details_endpoint_is_septic(housecanary_property_details_response, requests_mock):
-    api = HouseCanaryV2API()
 
-    requests_mock.get(
-        api.property_details_endpoint,
-        text=json.dumps(housecanary_property_details_response),
-        status_code=200,
-    )
+class TestHomeCanaryV2API():
+    def test_property_details_endpoint_is_septic(self, housecanary_property_details_response, requests_mock):
+        """Mostly mocked but confirms no exceptions are triggered in the codepath."""
+        api = HouseCanaryV2API()
 
-    response = api.get_property_details('fake-address', 'fake-zip')
-    
-    # Check that data is formatted as expected:
-    assert response.json()['property/details']['result']['property']['sewer'] == 'septic'
+        requests_mock.get(
+            api.property_details_endpoint,
+            text=json.dumps(housecanary_property_details_response),
+            status_code=200,
+        )
 
-    assert api.is_septic_system(response.json())
+        response = api.get_property_details('fake-address', 'fake-zip')
 
-
-def test_property_details_endpoint_is_not_septic(housecanary_property_details_response, requests_mock):
-    # Change fixture to a non-septic setting
-    housecanary_property_details_response['property/details']['result']['property']['sewer'] = 'municipal'
-
-    api = HouseCanaryV2API()
-    requests_mock.get(
-        api.property_details_endpoint,
-        text=json.dumps(housecanary_property_details_response),
-        status_code=200,
-    )
-
-    response = api.get_property_details('fake-address', 'fake-zip')
-    
-    # Check that data is formatted as expected:
-    assert response.json()['property/details']['result']['property']['sewer'] == 'municipal'
-
-    assert not api.is_septic_system(response.json())
+        # Check that data is formatted as expected:
+        assert response.json()['property/details']['result']['property']['sewer'] == 'septic'
