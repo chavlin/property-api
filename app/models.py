@@ -21,13 +21,11 @@ logger.setLevel(logging.INFO)
 class HouseCanaryV2API():
     """HouseCanary v2 API implementation."""
     base_endpoint = 'https://api.housecanary.com/v2'
+    property_details_endpoint = f"{base_endpoint}/property/details"
 
     # TODO let's support a get_ endpoint and a post_ endpoint, in case we want to grab batches...
-    # TODO let's abstract away address+zip into a Property class...
-    # TODO let's write unit tests...
-    # TODO let's figure out auth...
     def make_get_request(self, endpoint, params=None):
-        """Wrapper function to handle non-200 responses from 3rd party API.
+        """Wrapper function to handle GET requests from 3rd party API.
         Could imagine moving this to a base class if we had a different 3rd party API class in this service.
         """
         if not params:
@@ -42,6 +40,5 @@ class HouseCanaryV2API():
         return response
 
     def get_property_details(self, address: str, zipcode: str):
-        property_details_endpoint = f"{self.base_endpoint}/property/details"
         params = {'address': address, 'zipcode': zipcode}
-        return self.make_get_request(property_details_endpoint, params)
+        return self.make_get_request(self.property_details_endpoint, params)

@@ -11,7 +11,7 @@ import logging
 import flask
 from flask import Response, request
 
-from .models import HouseCanaryV2API
+from app.models import HouseCanaryV2API
 
 
 app = flask.Flask('property_api')
@@ -53,14 +53,17 @@ def get_septic_status():
 
     if response.status_code != 200:
         logger.warning('3rd-party API returned non-200 response.', extra={'status_code': response.status_code, 'response_text': response.text})
-        return Response('Error received from 3rd-party API. Check property-api logs for details.', 424)
+        # For now we'll return 200 since the property-api service is not at fault.  Can work with web app if they expect different code / response.
+        return Response('Error received from 3rd-party API. Check property-api logs for details.', 200)
 
     sewer_type = response['property/details']['result']['property']['sewer']
 
-    # TODO Should I return responses as Property objects?  Let's wait until the unit test gets set up.
+
     # NOTE: Endpoint can return any of the following: [Municipal, None, Storm, Septic, Yes]
     # 'Yes' denotes the possible existence of a Septic system; but for now endpoint will only return confirmation when we know for sure that Septic system exists.
-    if sewer_type == 'Septic':
+    if sewer_type.lower() == 'septic':
         return Response('Septic system found.', 200)
 
+    # We could change response to be something like a Property object.  E.g. send back {'address': address, 'zipcode': zipcode, 'septic': True/False}
+    # and any other data that could help the web app answer questions from the 3rd party API.
     return Response('Septic system not found.', 200)
