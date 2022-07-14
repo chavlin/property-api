@@ -56,12 +56,10 @@ def get_septic_status():
         # For now we'll return 200 since the property-api service is not at fault.  Can work with web app if they expect different code / response.
         return Response('Error received from 3rd-party API. Check property-api logs for details.', 200)
 
-    sewer_type = response['property/details']['result']['property']['sewer']
 
+    is_septic = api.is_septic_system(response.json())
 
-    # NOTE: Endpoint can return any of the following: [Municipal, None, Storm, Septic, Yes]
-    # 'Yes' denotes the possible existence of a Septic system; but for now endpoint will only return confirmation when we know for sure that Septic system exists.
-    if sewer_type.lower() == 'septic':
+    if is_septic:
         return Response('Septic system found.', 200)
 
     # We could change response to be something like a Property object.  E.g. send back {'address': address, 'zipcode': zipcode, 'septic': True/False}

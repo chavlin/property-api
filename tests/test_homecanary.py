@@ -1,7 +1,6 @@
 import json
 
 from app.models import HouseCanaryV2API
-from app.routes import get_septic_status
 
 def test_property_details_endpoint(housecanary_property_details_response, requests_mock):
     api = HouseCanaryV2API()
@@ -17,4 +16,4 @@ def test_property_details_endpoint(housecanary_property_details_response, reques
     # Check that data is formatted as expected:
     assert response.json()['property/details']['result']['property']['sewer'] == 'septic'
 
-    get_septic_status()
+    assert api.is_septic_system(response.json())

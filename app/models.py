@@ -42,3 +42,13 @@ class HouseCanaryV2API():
     def get_property_details(self, address: str, zipcode: str):
         params = {'address': address, 'zipcode': zipcode}
         return self.make_get_request(self.property_details_endpoint, params)
+
+    # This might be better placed in a View instead of the API Model, but was easier to set up testing this way:
+    def is_septic_system(self, property_details_response: dict):
+        sewer_type = property_details_response['property/details']['result']['property']['sewer']
+
+        # NOTE: Endpoint can return any of the following: [Municipal, None, Storm, Septic, Yes]
+        # 'Yes' denotes the possible existence of a Septic system; but for now endpoint will only return confirmation when we know for sure that Septic system exists.
+        if sewer_type.lower() == 'septic':
+            return True
+        return False
