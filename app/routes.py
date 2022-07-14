@@ -1,7 +1,7 @@
 """
 Endpoints for the application are defined here.
 
-This structure is good for simple demo; as app grows in complexity
+This structure is fine for simple demo; but as app grows in complexity
 might prefer using Flask Blueprint for route structure which can
 link directly to View functions imported elsewhere.
 """
@@ -15,6 +15,28 @@ from flask import Response, request
 from app.models import HouseCanaryV2API
 
 
+# Move to utils function eventually:
+def handle_third_party_failure_response(response: dict, logger):
+    """Helper function to consistently handle failures in 3rd-party API.  Consistent logging + response."""
+    logger.warning('3rd-party API returned non-200 response.',
+        extra={
+            'status_code': response.status_code,
+            'response_text': response.text
+        }
+    )
+    # For now we'll return 200 since the property-api service is not at fault.
+    # Can work with web app if they expect different code / response.
+    final_response = {'message': 'Error received from 3rd-party API. Check property-api logs for details.'}
+    return Response(json.dumps(final_response), 200)
+
+
+# Move to utils function eventually:
+def send_successful_response(response_body: dict):
+    """Helper function to handle consistent parsing / status code for successful response"""
+    return Response(json.dumps(response_body), 200)
+
+
+# This is the actual app code
 def create_app():
     app = flask.Flask('property-api')
     logger = flask.logging.create_logger(app)
@@ -51,7 +73,7 @@ def create_app():
         {
             "address": "123 Main St.",
             "zipcode": "12345",
-            "septic": true,
+            "septic": true
         }
         """
         app.logger.info('Querying septic status...')
@@ -62,7 +84,7 @@ def create_app():
         address = request_body.get('address')
         zipcode = request_body.get('zipcode')
 
-        # a schema could do this better, but quick validation that args are formatted basically right:
+        # Input validation (a schema would do this better)
         assert len(request_body) == 2
         assert address
         assert zipcode
@@ -71,16 +93,7 @@ def create_app():
         property_response = api.get_property_details(request_body)
 
         if property_response.status_code != 200:
-            logger.warning('3rd-party API returned non-200 response.',
-                extra={
-                    'status_code': property_response.status_code,
-                    'response_text': property_response.text
-                }
-            )
-            # For now we'll return 200 since the property-api service is not at fault.
-            # Can work with web app if they expect different code / response.
-            response = {'message': 'Error received from 3rd-party API. Check property-api logs for details.'}
-            return Response(json.dumps(response), 200)
+            return handle_third_party_failure_response(property_response, logger)
 
         sewer_type = api.get_sewer_type(property_response.json())
 
@@ -99,7 +112,7 @@ def create_app():
             'septic': septic,
         }
 
-        return Response(json.dumps(final_response_body), 200)
+        return send_successful_response(final_response_body)
 
     @app.route('/v1/property/septic-status/batch', methods=['POST'])
     def get_septic_status_batch():
@@ -138,25 +151,20 @@ def create_app():
         request_body = request.get_json()
         app.logger.debug(f'request_body: {request_body}')
 
-        # a schema could do this better, but quick validation that args are formatted basically right:
+        # Input validation (a schema would do this better)
         for property in request_body:
             assert len(property) == 2
             assert property.get('address')
             assert property.get('zipcode')
-        
+
+        # We'd also eventually want to make sure request size is less than 100 items,
+        # since that's the limit of the 3rd party endpoint. But that seems very unlikely given the use case here.
+
         api = HouseCanaryV2API()
         property_response = api.get_property_details_batch(request_body)
 
         if property_response.status_code != 200:
-            logger.warning(
-                '3rd-party API returned non-200 response.',
-                extra={
-                    'status_code': property_response.status_code,
-                    'response_text': property_response.text
-                }
-            )
-            response = {'message': 'Error received from 3rd-party API. Check property-api logs for details.'}
-            return Response(json.dumps(response), 200)
+            return handle_third_party_failure_response(property_response, logger)
 
         # Here we will be savvier about forming the final response, using the response body as an initial template.
         # Then we merge septic information from the 3rd party API's property_response, one-by-one
@@ -170,6 +178,6 @@ def create_app():
             else:
                 final_response_body[i].update({'septic': False})
 
-        return Response(json.dumps(final_response_body), 200)
+        return send_successful_response(final_response_body)
 
     return app
