@@ -52,3 +52,7 @@ class HouseCanaryV2API():
     def get_property_details_batch(self, json):
         """Access the POST property-details endpoint (batch mode)"""
         return self.make_post_request(self.property_details_endpoint, json)
+
+    def get_sewer_type(self, property_details_response: dict):
+        """Helper function to parse response from property-details endpoint to find the sewer system type."""
+        return property_details_response['property/details']['result']['property']['sewer']

@@ -16,7 +16,7 @@ class TestHomeCanaryV2API():
         response = api.get_property_details({'address': 'fake-address', 'zipcode': 'fake-zip'})
 
         # Check that data is formatted as expected:
-        assert response.json()['property/details']['result']['property']['sewer'] == 'septic'
+        assert api.get_sewer_type(response.json()) == 'septic'
 
     def test_property_details_batch_endpoint(self, housecanary_property_details_batch_response, requests_mock):
         """Mostly mocked but confirms no exceptions are triggered in the codepath."""
@@ -35,8 +35,8 @@ class TestHomeCanaryV2API():
         )
 
         # Check that data is formatted as expected:
-        # TODO why is this here???
+        # TODO why is this here???  Why does batch endpoint return in different format from Get?  Is it a dict/list difference?
         response_body = json.loads(response.json())
         assert len(response_body) == 2
-        assert response_body[0]['property/details']['result']['property']['sewer'] == 'septic'
-        assert response_body[1]['property/details']['result']['property']['sewer'] == 'municipal'
+        assert api.get_sewer_type(response_body[0]) == 'septic'
+        assert api.get_sewer_type(response_body[1]) == 'municipal'

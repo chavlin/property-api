@@ -10,7 +10,7 @@ def test_healthcheck(client):
 
 
 def test_septic_status_true(client, housecanary_property_details_response, requests_mock):
-    # Change fixture to a non-septic setting
+    # Change fixture to septic setting as precondition:
     housecanary_property_details_response['property/details']['result']['property']['sewer'] = 'septic'
 
     address = 'fake-address'
@@ -39,7 +39,7 @@ def test_septic_status_true(client, housecanary_property_details_response, reque
 
 
 def test_septic_status_false(client, housecanary_property_details_response, requests_mock):
-    # Change fixture to a non-septic setting
+    # Change fixture to a non-septic setting as precondition:
     housecanary_property_details_response['property/details']['result']['property']['sewer'] = 'municipal'
 
     address = 'fake-address'
@@ -71,7 +71,7 @@ def test_septic_status_false(client, housecanary_property_details_response, requ
 
 
 def test_septic_status_batch(client, housecanary_property_details_batch_response, requests_mock):
-    # Adjust fixture as precondition:
+    # Adjust fixture as precondition: one septic, one non-septic sewer system.
     housecanary_property_details_batch_response[0]['property/details']['result']['property']['sewer'] == 'septic'
     housecanary_property_details_batch_response[1]['property/details']['result']['property']['sewer'] == 'municipal'
 

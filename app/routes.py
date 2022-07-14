@@ -80,7 +80,7 @@ def create_app():
             # For now we'll return 200 since the property-api service is not at fault.  Can work with web app if they expect different code / response.
             return Response('Error received from 3rd-party API. Check property-api logs for details.', 200)
 
-        sewer_type = property_response.json()['property/details']['result']['property']['sewer']
+        sewer_type = api.get_sewer_type(property_response.json())
 
         # NOTE: Endpoint can return any of the following: [Municipal, None, Storm, Septic, Yes]
         # 'Yes' denotes the possible existence of a Septic system; but for now endpoint will only return confirmation when we know for sure that Septic system exists.
@@ -158,9 +158,8 @@ def create_app():
         property_response_body = property_response.json()
         final_response_body = deepcopy(request_body)
         for i, property in enumerate(property_response_body):
-            sewer_type = property['property/details']['result']['property']['sewer']
             # NOTE: see above note on 'Yes' sewer systems; current implementation does NOT consider 'Yes' systems to be septic systems.
-            if sewer_type.lower() == 'septic':
+            if api.get_sewer_type(property).lower() == 'septic':
                 final_response_body[i].update({'septic': True})
             else:
                 final_response_body[i].update({'septic': False})
