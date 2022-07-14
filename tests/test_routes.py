@@ -70,6 +70,31 @@ def test_septic_status_false(client, housecanary_property_details_response, requ
     assert json.loads(response.text) == expected
 
 
+def test_septic_status_error_response_from_third_party(client, housecanary_property_details_response, requests_mock):
+    # Change fixture to septic setting as precondition:
+    housecanary_property_details_response['property/details']['result']['property']['sewer'] = 'septic'
+
+    address = 'fake-address'
+    zipcode = '12345'
+
+    api = HouseCanaryV2API()
+    requests_mock.get(
+        api.property_details_endpoint,
+        text=json.dumps(housecanary_property_details_response),
+        status_code=502, # Bad gateway
+    )
+
+    response = client.post(
+        '/v1/property/septic-status',
+        json={
+            'address': address,
+            'zipcode': zipcode,
+        }
+    )
+
+    assert json.loads(response.text) == {'message': 'Error received from 3rd-party API. Check property-api logs for details.'}
+
+
 def test_septic_status_batch(client, housecanary_property_details_batch_response, requests_mock):
     # Adjust fixture as precondition: one septic, one non-septic sewer system.
     housecanary_property_details_batch_response[0]['property/details']['result']['property']['sewer'] == 'septic'

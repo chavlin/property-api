@@ -21,6 +21,7 @@ NOTE: All POST endpoints expect the header 'content-type': 'application-json'
 
 
 ## Next Steps
+* Coordinate with Web App to determine preferred interface; could combine the property-details single and batch endpoints, or discard one entirely. (maybe always do batch queries even with query of one).
 * Actually setting up access to a HouseCanary API Key to talk to a live service.
 * Correspondingly, setting up authentication on this endpoint so that only authorized users can contact it.
 * Deployment code: cloud infrastructure via Terraform?  CI/CD integration? 
