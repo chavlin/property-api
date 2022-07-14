@@ -30,6 +30,25 @@ class HouseCanaryV2API():
         )
         return response
 
-    def get_property_details(self, address: str, zipcode: str):
-        params = {'address': address, 'zipcode': zipcode}
+    def make_post_request(self, endpoint, json=None):
+        """Wrapper function to handle POST requests from 3rd party API.
+        Could perhaps move this to a base class if we had a different 3rd party API class in this service.
+        """
+        if not json:
+            json = dict()
+
+        response = requests.post(
+            endpoint,
+            json=json,
+            auth=HOUSE_CANARY_AUTH,
+            timeout=30
+        )
+        return response
+
+    def get_property_details(self, params):
+        """Access the GET property-details endpoint"""
         return self.make_get_request(self.property_details_endpoint, params)
+
+    def get_property_details_batch(self, json):
+        """Access the POST property-details endpoint (batch mode)"""
+        return self.make_post_request(self.property_details_endpoint, json)

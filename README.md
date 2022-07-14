@@ -17,6 +17,8 @@ The rest of the setup can be done via a Makefile:
 
 Currently the 3rd party API that `property-api` connects to does not have its credentials, so live testing is not yet possible.  `make run` will start a flask instance that a user could test by navigating in a browser to `http://127.0.0.1:5000/health-check`.  But code paths can only truly be run in mocked unit tests for now.
 
+NOTE: All POST endpoints expect the header 'content-type': 'application-json'
+
 
 ## Next Steps
 * Actually setting up access to a HouseCanary API Key to talk to a live service.

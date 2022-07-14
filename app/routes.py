@@ -8,6 +8,8 @@ link directly to View functions imported elsewhere.
 import flask
 import json
 import logging
+from copy import deepcopy
+
 from flask import Response, request
 
 from app.models import HouseCanaryV2API
@@ -39,32 +41,46 @@ def create_app():
         Endpoint that returns whether a property has a septic system.
         Interfaces with the HouseCanary API, handling input construction and output parsing.
 
-        Example body:
+        Example JSON body:
         {
             "address": "123 Main St.",
             "zipcode": "12345"
+        }
+
+        Example JSON response:
+        {
+            "address": "123 Main St.",
+            "zipcode": "12345",
+            "septic": true,
         }
         """
         app.logger.info('Querying septic status...')
 
         request_body = request.get_json()
-        app.logger.info(f'request_body: {request_body}')
+        app.logger.debug(f'request_body: {request_body}')
 
         address = request_body.get('address')
         zipcode = request_body.get('zipcode')
-        
-        api = HouseCanaryV2API()
-        response = api.get_property_details(
-            address,
-            zipcode,
-        )
 
-        if response.status_code != 200:
-            logger.warning('3rd-party API returned non-200 response.', extra={'status_code': response.status_code, 'response_text': response.text})
+        # a schema could do this better, but quick validation that args are formatted basically right:
+        assert len(request_body) == 2
+        assert address
+        assert zipcode
+    
+        api = HouseCanaryV2API()
+        property_response = api.get_property_details(request_body)
+
+        if property_response.status_code != 200:
+            logger.warning('3rd-party API returned non-200 response.',
+                extra={
+                    'status_code': property_response.status_code,
+                    'response_text': property_response.text
+                }
+            )
             # For now we'll return 200 since the property-api service is not at fault.  Can work with web app if they expect different code / response.
             return Response('Error received from 3rd-party API. Check property-api logs for details.', 200)
 
-        sewer_type = response.json()['property/details']['result']['property']['sewer']
+        sewer_type = property_response.json()['property/details']['result']['property']['sewer']
 
         # NOTE: Endpoint can return any of the following: [Municipal, None, Storm, Septic, Yes]
         # 'Yes' denotes the possible existence of a Septic system; but for now endpoint will only return confirmation when we know for sure that Septic system exists.
@@ -73,55 +89,82 @@ def create_app():
             septic = True
   
         # Could codify these responses as Property objects, expanded as needed, potentially pulling much more data from the 3rd party api.
-        resp = {
+        final_response_body = {
             'address': address,
             'zipcode': zipcode,
             'septic': septic,
         }
 
-        return Response(json.dumps(resp), 200)
+        return Response(json.dumps(final_response_body), 200)
 
-    # @app.route('/v1/property/septic-status/batch', methods=['POST'])
-    # def get_batch_septic_status():
-    #     """
-    #     Batch endpoint that returns whether multiple properties have septic systems.
-    #     Interfaces with the HouseCanary API, handling input construction and output parsing.
+    @app.route('/v1/property/septic-status/batch', methods=['POST'])
+    def get_septic_status_batch():
+        """
+        Batch endpoint that returns whether multiple properties have septic systems.
+        Interfaces with the HouseCanary API, handling input construction and output parsing.
 
-    #     Example body:
-    #     [
-    #         {
-    #             "address": "123 Main St.",
-    #             "zipcode": "12345"
-    #         }
-    #     """
-    #     app.logger.info('Querying septic status...')
+        Example JSON body:
+        [
+            {
+                "address": "123 Main St.",
+                "zipcode": "12345"
+            },
+            {
+                "address": "456 Oak Pl.",
+                "zipcode": "67890"
+            }
+        ]
 
-    #     request_body = request.get_json()
-    #     app.logger.info(f'request_body: {request_body}')
+        Example JSON response:
+        [
+            {
+                "address": "123 Main St.",
+                "zipcode": "12345",
+                "septic": true,
+            },
+            {
+                "address": "456 Oak Pl.",
+                "zipcode": "67890",
+                "septic": false
+            }
+        ]
+        """
+        app.logger.info('Querying septic status...')
 
-    #     api = HouseCanaryV2API()
+        request_body = request.get_json()
+        app.logger.debug(f'request_body: {request_body}')
 
-    #     response = api.get_property_details(
-    #         request_body.get('address'),
-    #         request_body.get('zipcode'),
-    #     )
+        # a schema could do this better, but quick validation that args are formatted basically right:
+        for property in request_body:
+            assert len(property) == 2
+            assert property.get('address')
+            assert property.get('zipcode')
+        
+        api = HouseCanaryV2API()
+        property_response = api.get_property_details_batch(request_body)
 
-    #     if response.status_code != 200:
-    #         logger.warning('3rd-party API returned non-200 response.', extra={'status_code': response.status_code, 'response_text': response.text})
-    #         # For now we'll return 200 since the property-api service is not at fault.  Can work with web app if they expect different code / response.
-    #         return Response('Error received from 3rd-party API. Check property-api logs for details.', 200)
+        if property_response.status_code != 200:
+            logger.warning(
+                '3rd-party API returned non-200 response.',
+                extra={
+                    'status_code': property_response.status_code,
+                    'response_text': property_response.text
+                }
+            )
+            return Response('Error received from 3rd-party API. Check property-api logs for details.', 200)
 
-    #     sewer_type = response.json()['property/details']['result']['property']['sewer']
+        # Here we will be savvier about forming the final response, using the response body as an initial template.
+        # Then we merge septic information from the 3rd party API's property_response, one-by-one
+        property_response_body = property_response.json()
+        final_response_body = deepcopy(request_body)
+        for i, property in enumerate(property_response_body):
+            sewer_type = property['property/details']['result']['property']['sewer']
+            # NOTE: see above note on 'Yes' sewer systems; current implementation does NOT consider 'Yes' systems to be septic systems.
+            if sewer_type.lower() == 'septic':
+                final_response_body[i].update({'septic': True})
+            else:
+                final_response_body[i].update({'septic': False})
 
-    #     # NOTE: Endpoint can return any of the following: [Municipal, None, Storm, Septic, Yes]
-    #     # 'Yes' denotes the possible existence of a Septic system; but for now endpoint will only return confirmation when we know for sure that Septic system exists.
-    #     if sewer_type.lower() == 'septic':
-    #         resp = {'septic': True}
-    #         return Response(json.dumps(resp), 200)
-
-    #     # We could change response to be something like a Property object.  E.g. send back {'address': address, 'zipcode': zipcode, 'septic': True/False}
-    #     # and any other data that could help the web app answer questions from the 3rd party API.
-    #     resp = {'septic': False}
-    #     return Response(json.dumps(resp), 200)
+        return Response(json.dumps(final_response_body), 200)
 
     return app

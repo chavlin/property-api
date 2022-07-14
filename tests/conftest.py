@@ -1,4 +1,5 @@
 import pytest
+from copy import deepcopy
 
 from app.routes import create_app
 
@@ -69,3 +70,16 @@ def housecanary_property_details_response():
             }
         }
     }
+
+
+@pytest.fixture
+def housecanary_property_details_batch_response(housecanary_property_details_response):
+    property1 = deepcopy(housecanary_property_details_response)
+    property2 = deepcopy(housecanary_property_details_response)
+
+    property2['property/details']['result']['property']['sewer'] = 'municipal'
+
+    return [
+        property1,
+        property2,
+    ]
